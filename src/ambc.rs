@@ -3,6 +3,8 @@ extern mod rustc = "rustc#0.9";
 use rustc::lib::llvm::llvm;
 use rustc::lib::llvm::{False};
 
+mod untyped_lambda;
+
 fn main() {
     unsafe {
         let llvm_context = llvm::LLVMContextCreate();
