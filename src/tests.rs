@@ -1,8 +1,13 @@
-use untyped_lambda::{Var, parse};
+use untyped_lambda::{Abs, Var, parse};
 
 mod untyped_lambda;
 
 #[test]
 fn parse_variable() {
-    assert_eq!(Var(~"x"), parse(~"x"));
+    assert_eq!(~Var(~"x"), parse("x"));
+}
+
+#[test]
+fn parse_abstraction() {
+    assert_eq!(~Abs(~"x", ~Var(~"y")), parse("\\x.y"))
 }
