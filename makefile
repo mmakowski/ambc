@@ -1,7 +1,13 @@
-all: ambc
+all: test ambc
 
-ambc: src/ambc.rs
+test: tests
+	./tests
+
+tests: src/*
+	rustc --test --out-dir . src/tests.rs
+
+ambc: src/*
 	rustc --out-dir . $<
 
 clean:
-	rm -fr ambc
+	rm -f ambc tests
