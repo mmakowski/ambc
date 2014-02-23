@@ -1,3 +1,5 @@
+all: ambc
+
 ambc: src/ambc.rs
 	rustc --out-dir . $<
 
