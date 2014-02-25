@@ -45,9 +45,9 @@ pub fn parse(input: &str) -> ~Term {
 
 fn mk_term(tokens: &[Token]) -> ~Term {
     match tokens.head() {
-        &TLambda  => mk_abs(tokens),
-        &TName(_) => mk_var_or_app(tokens),
-        other     => fail!(format!("expected a lambda or a name but got {:?}", *other))
+        &TLambda   => mk_abs(tokens),
+        &TName(..) => mk_var_or_app(tokens),
+        other      => fail!(format!("expected a lambda or a name but got {:?}", *other))
     }
 }
 
