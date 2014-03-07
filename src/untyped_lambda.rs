@@ -73,3 +73,23 @@ fn get_name(token: &Token) -> ~str {
         other         => fail!(format!("expected a name but got {:?}", *other))
     }
 }
+
+#[cfg(test)]
+mod test {
+    use super::{Var, Abs, App, parse};
+
+    #[test]
+    fn parse_variable() {
+        assert_eq!(~Var(~"x"), parse("x"));
+    }
+
+    #[test]
+    fn parse_abstraction() {
+        assert_eq!(~Abs(~"x", ~Var(~"y")), parse("\\x.y"))
+    }
+
+    #[test]
+    fn parse_application() {
+        assert_eq!(~App(~Var(~"x"), ~Var(~"y")), parse("x y"))
+    }
+}
