@@ -112,26 +112,37 @@ mod test {
 
     #[test]
     fn parse_variable_single_letter() {
-        assert_eq!(~Var(~"x"), parse("x"))
+        assert_eq!(parse("x"), 
+                   ~Var(~"x"))
     }
 
     #[test]
     fn parse_variable_alnum() {
-        assert_eq!(~Var(~"some_Alnum-131"), parse("some_Alnum-131"))
+        assert_eq!(parse("some_Alnum-131"), 
+                   ~Var(~"some_Alnum-131"))
     }
 
     #[test]
     fn parse_abstraction() {
-        assert_eq!(~Abs(~"x", ~Var(~"y")), parse("(\\x.y)"))
+        assert_eq!(parse("(\\x.y)"),
+                   ~Abs(~"x", ~Var(~"y")))
     }
 
     #[test]
     fn parse_application_simple() {
-        assert_eq!(~App(~Var(~"x"), ~Var(~"y")), parse("(x y)"))
+        assert_eq!(parse("(x y)"),
+                   ~App(~Var(~"x"), ~Var(~"y")))
     }
 
     #[test]
     fn parse_nested_applications() {
-        assert_eq!(~App(~App(~Var(~"x"), ~Var(~"y")), ~App(~Var(~"z"), ~Var(~"u"))), parse("((x y)(z u))"))
+        assert_eq!(parse("((x y)(z u))"),
+                   ~App(~App(~Var(~"x"), ~Var(~"y")), ~App(~Var(~"z"), ~Var(~"u"))))
+    }
+
+    #[test]
+    fn parse_complex_expression() {
+        assert_eq!(parse("(\\x_1.(free (\\snd.(snd x_1))))"),
+                   ~Abs(~"x_1", ~App(~Var(~"free"), ~Abs(~"snd", ~App(~Var(~"snd"), ~Var(~"x_1"))))))
     }
 }
