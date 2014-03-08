@@ -4,7 +4,7 @@ test: tests
 	./tests
 
 tests: src/*
-	rustc --test -o tests src/ambc.rs
+	rustc --test -o tests $<
 
 ambc: src/*
 	rustc --out-dir . $<
