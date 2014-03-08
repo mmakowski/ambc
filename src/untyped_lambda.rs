@@ -25,16 +25,26 @@ fn lex(input: &str) -> ~[Token] {
             '('  => tokens.push(TLBr),
             ')'  => tokens.push(TRBr),
             ' '  => {}
-            _    => tokens.push(read_name(input, &pos))
+            _    => { 
+                    let (name, end_pos) = read_name(input, pos);
+                    tokens.push(name);
+                    pos = end_pos
+                }
         }
         pos += 1
     }
     tokens
 }
 
-fn read_name(input: &str, pos: &uint) -> Token {
-    // TODO: read until char that is not part of name
-    TName(input.slice_chars(*pos, *pos + 1).to_owned())
+fn read_name(input: &str, start_pos: uint) -> (Token, uint) {
+    let mut end_pos = start_pos;
+    while end_pos < input.len() && is_id_char(input.char_at(end_pos)) { end_pos += 1 };
+    if end_pos == start_pos { fail!(format!("expected identifier character but got {:?}", input.char_at(start_pos))) }
+    (TName(input.slice_chars(start_pos, end_pos).to_owned()), end_pos - 1)
+}
+
+fn is_id_char(c: char) -> bool {
+    "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_-+/*^".contains_char(c)
 }
 
 /*
@@ -101,8 +111,13 @@ mod test {
     use super::{Var, Abs, App, parse};
 
     #[test]
-    fn parse_variable() {
-        assert_eq!(~Var(~"x"), parse("x"));
+    fn parse_variable_single_letter() {
+        assert_eq!(~Var(~"x"), parse("x"))
+    }
+
+    #[test]
+    fn parse_variable_alnum() {
+        assert_eq!(~Var(~"some_Alnum-131"), parse("some_Alnum-131"))
     }
 
     #[test]
