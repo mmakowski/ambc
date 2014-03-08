@@ -25,6 +25,7 @@ fn lex(input: &str) -> ~[Token] {
             '('  => tokens.push(TLBr),
             ')'  => tokens.push(TRBr),
             ' '  => {}
+            '\n' => {}
             _    => { 
                     let (name, end_pos) = read_name(input, pos);
                     tokens.push(name);
@@ -144,5 +145,11 @@ mod test {
     fn parse_complex_expression() {
         assert_eq!(parse("(\\x_1.(free (\\snd.(snd x_1))))"),
                    ~Abs(~"x_1", ~App(~Var(~"free"), ~Abs(~"snd", ~App(~Var(~"snd"), ~Var(~"x_1"))))))
+    }
+
+    #[test]
+    fn parse_expression_with_trailing_newline() {
+        assert_eq!(parse("x\n"),
+                   ~Var(~"x"))
     }
 }
