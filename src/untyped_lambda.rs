@@ -11,7 +11,8 @@ enum Token {
     TLambda,
     TName(~str),
     TDot,
-    TSpace
+    TLBr,
+    TRBr
 }
 
 fn lex(input: &str) -> ~[Token] {
@@ -21,7 +22,9 @@ fn lex(input: &str) -> ~[Token] {
         match input.char_at(pos) {
             '\\' => tokens.push(TLambda),
             '.'  => tokens.push(TDot),
-            ' '  => tokens.push(read_space(input, &pos)),
+            '('  => tokens.push(TLBr),
+            ')'  => tokens.push(TRBr),
+            ' '  => {}
             _    => tokens.push(read_name(input, &pos))
         }
         pos += 1
@@ -29,42 +32,61 @@ fn lex(input: &str) -> ~[Token] {
     tokens
 }
 
-fn read_space(input: &str, pos: &uint) -> Token {
-    // TODO: read until char that is not space or end of input
-    TSpace
-}
-
 fn read_name(input: &str, pos: &uint) -> Token {
     // TODO: read until char that is not part of name
     TName(input.slice_chars(*pos, *pos + 1).to_owned())
 }
 
+/*
+grammar
+=======
+    <Term> ::= <Var> | <Abs> | <App>
+    <Var>  ::= <name>
+    <Abs>  ::= (\<name>.<Term>)
+    <App>  ::= (<Term> <Term>)
+
+*/
+
+struct ParseResult<'a> { term: ~Term, remainder: &'a [Token] }
+
 pub fn parse(input: &str) -> ~Term {
-    mk_term(lex(input))
+    let tokens = lex(input);
+    let result = mk_term(tokens);
+    match result.remainder {
+        []    => result.term,
+        other => fail!(format!("unexpected tokens: {:?}", other))
+    }
 }
 
-fn mk_term(tokens: &[Token]) -> ~Term {
+fn mk_term<'a>(tokens: &'a [Token]) -> ParseResult<'a> {
     match tokens.head() {
-        &TLambda   => mk_abs(tokens),
-        &TName(..) => mk_var_or_app(tokens),
-        other      => fail!(format!("expected a lambda or a name but got {:?}", *other))
+        &TName(..) => ParseResult { term: ~Var(get_name(tokens.head())), remainder: tokens.tail() },
+        &TLBr      => mk_abs_or_app(tokens.tail()),
+        other      => fail!(format!("expected a name or '(' but got '{:?}'", *other))
     }
 }
 
-fn mk_abs(tokens: &[Token]) -> ~Term {
-   ~Abs(get_name(&tokens[1]), mk_term(tokens.slice_from(3)))
+fn mk_abs_or_app<'a>(tokens: &'a [Token]) -> ParseResult<'a> {
+    match tokens.head() {
+        &TLambda => mk_abs(tokens),
+        _        => mk_app(tokens)
+    }
 }
 
-fn mk_var_or_app(tokens: &[Token]) -> ~Term {
-    let first_term = ~Var(get_name(tokens.head()));
-    if tokens.len() == 1 { 
-        first_term 
-    } else {
-        match &tokens[1] {
-            &TSpace => ~App(first_term, mk_term(tokens.slice_from(2))),
-            other   => fail!(format!("expected a whitespace but got {:?}", *other))
-        }
-    }
+fn mk_abs<'a>(tokens: &'a [Token]) -> ParseResult<'a> {
+    // TODO: validate lambda and dot
+    let body = mk_term(tokens.slice_from(3));
+    // TODO: validate remainder.head is RBr
+    let remainder = body.remainder.tail();
+    ParseResult { term: ~Abs(get_name(&tokens[1]), body.term), remainder: remainder }
+}
+
+fn mk_app<'a>(tokens: &'a [Token]) -> ParseResult<'a> {
+    let first = mk_term(tokens);
+    let second = mk_term(first.remainder);
+    // TODO: validate remainder.head is RBr
+    let remainder = second.remainder.tail();
+    ParseResult { term: ~App(first.term, second.term), remainder: remainder }
 }
 
 fn get_name(token: &Token) -> ~str {
@@ -85,11 +107,16 @@ mod test {
 
     #[test]
     fn parse_abstraction() {
-        assert_eq!(~Abs(~"x", ~Var(~"y")), parse("\\x.y"))
+        assert_eq!(~Abs(~"x", ~Var(~"y")), parse("(\\x.y)"))
     }
 
     #[test]
-    fn parse_application() {
-        assert_eq!(~App(~Var(~"x"), ~Var(~"y")), parse("x y"))
+    fn parse_application_simple() {
+        assert_eq!(~App(~Var(~"x"), ~Var(~"y")), parse("(x y)"))
+    }
+
+    #[test]
+    fn parse_nested_applications() {
+        assert_eq!(~App(~App(~Var(~"x"), ~Var(~"y")), ~App(~Var(~"z"), ~Var(~"u"))), parse("((x y)(z u))"))
     }
 }
