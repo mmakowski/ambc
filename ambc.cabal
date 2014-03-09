@@ -1,0 +1,31 @@
+name:           ambc
+version:        0.1.0
+cabal-version:  >= 1.9.2
+license:        MIT
+license-file:   LICENSE
+author:         Maciek Makowski
+maintainer:     Maciek Makowski <maciek.makowski@gmail.com>
+synopsis:       An experiment in multi-stage compilation
+build-type:     Simple
+
+executable ambc
+  hs-source-dirs: src
+  main-is:        Main.hs
+  ghc-options:    -Wall -Werror
+  build-depends:  
+                  base                       >= 4.6,
+                  parsec                     >= 3.1
+
+test-suite all-tests
+  type:           exitcode-stdio-1.0
+  hs-source-dirs: src, test
+  main-is:        Test.hs
+  ghc-options:    -Wall -Werror
+  build-depends:  
+                  base                       >= 4.6,
+                  HUnit                      >= 1.2,
+                  parsec                     >= 3.1,
+                  test-framework             >= 0.8,
+                  test-framework-hunit       >= 0.3, 
+                  test-framework-quickcheck2 >= 0.3
+  x-uses-tf:      true
