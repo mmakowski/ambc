@@ -13,8 +13,10 @@ executable ambc
   main-is:        Main.hs
   ghc-options:    -Wall -Werror
   build-depends:  
-                  base                       >= 4.6,
-                  parsec                     >= 3.1
+                  base                       == 4.6.0.1,
+                  parsec                     == 3.1.5
+  other-modules:  UntypedLambda.Syntax,
+                  UntypedLambda.Parser
 
 test-suite all-tests
   type:           exitcode-stdio-1.0
@@ -22,10 +24,11 @@ test-suite all-tests
   main-is:        Test.hs
   ghc-options:    -Wall -Werror
   build-depends:  
-                  base                       >= 4.6,
-                  HUnit                      >= 1.2,
-                  parsec                     >= 3.1,
-                  test-framework             >= 0.8,
-                  test-framework-hunit       >= 0.3, 
-                  test-framework-quickcheck2 >= 0.3
+                  base                       == 4.6.0.1,
+                  HUnit                      == 1.2.5.2,
+                  parsec                     == 3.1.5,
+                  QuickCheck                 == 2.6, 
+                  test-framework             == 0.8.0.3,
+                  test-framework-hunit       == 0.3.0.1, 
+                  test-framework-quickcheck2 == 0.3.0.2
   x-uses-tf:      true

@@ -1,9 +1,18 @@
 module UntypedLambda.Syntax 
-  ( Term (..)
+  ( idChars
+  , Term (..)
   )
 where
+
+idChars :: [Char]
+idChars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
 
 data Term = Var String
           | Abs String Term
           | App Term Term
-  deriving (Eq, Show)
+  deriving (Eq)
+
+instance Show Term where
+  show (Var ident)       = ident
+  show (Abs ident term)  = "(\\" ++ ident ++ "." ++ (show term) ++ ")"
+  show (App term1 term2) = "(" ++ (show term1) ++ " " ++ (show term2) ++ ")"
