@@ -1,6 +1,6 @@
 name:           ambc
 version:        0.1.0
-cabal-version:  >= 1.9.2
+cabal-version:  >= 1.18.1
 license:        MIT
 license-file:   LICENSE
 author:         Maciek Makowski
