@@ -20,7 +20,6 @@ pApp :: Parser Term
 pApp = do
   verbatim "("
   term1 <- pTerm
-  verbatim " "
   term2 <- pTerm
   verbatim ")"
   return $ App term1 term2

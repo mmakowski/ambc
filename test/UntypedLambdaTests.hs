@@ -1,6 +1,7 @@
 {-# OPTIONS_GHC -fno-warn-orphans -fno-warn-type-defaults #-}
 module UntypedLambdaTests 
-  ( allTests 
+  ( allTests
+  , parseUL -- for interactive testing 
   )
 where
 
