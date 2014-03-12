@@ -5,7 +5,7 @@ module UntypedLambda.Syntax
 where
 
 idChars :: [Char]
-idChars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
+idChars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_+-*/%^<>=:?!@"
 
 data Term = Var String
           | Abs String Term

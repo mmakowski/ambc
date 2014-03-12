@@ -1,3 +1,4 @@
+{-# LANGUAGE FlexibleContexts #-}
 module UntypedLambda.Parser
   ( parseString
   )
@@ -47,9 +48,6 @@ contents p = do
   eof
   return r
 
-lexer :: T.TokenParser ()
-lexer = T.makeTokenParser emptyDef
-
 identifier :: Parser String
 identifier = T.identifier lexer
 
@@ -57,3 +55,11 @@ verbatim :: String => Parser ()
 verbatim s = do 
   _ <- string s
   return ()
+
+lexer :: T.TokenParser ()
+lexer = T.makeTokenParser $ emptyDef { T.identLetter = identParser
+                                     , T.identStart = identParser
+                                     }
+
+identParser :: Stream s m Char => ParsecT s u m Char
+identParser = oneOf idChars
