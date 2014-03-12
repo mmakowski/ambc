@@ -22,10 +22,12 @@ allTests = [parsing]
 
 parsing :: Test
 parsing = testGroup "untyped lambda parsing" 
-  [ testCase     "variable"    $ parseString "x"       @=? Right (Var "x")
-  , testCase     "abstraction" $ parseString "(\\x.y)" @=? Right (Abs "x" (Var "y"))
-  , testCase     "application" $ parseString "(x y)"   @=? Right (App (Var "x") (Var "y"))
-  , testProperty "show/parse round trip" $ \term -> parseString (show term) == Right term
+  [ testCase     "variable"    $ "x"           `assertParsesTo` (Var "x")
+  , testCase     "abstraction" $ "(\\x.y)"     `assertParsesTo` (Abs "x" (Var "y"))
+  , testCase     "application" $ "(x y)"       `assertParsesTo` (App (Var "x") (Var "y"))
+  , testCase     "application with whitespace" $ 
+                                 "((\\x.y) z)" `assertParsesTo` (App (Abs "x" (Var "y")) (Var "z"))
+  , testProperty "show/parse round trip" $ \term -> (show term) `parsesTo` term
   ]
 
 instance Arbitrary Term where
@@ -36,6 +38,12 @@ instance Arbitrary Term where
                              , Abs <$> arbitraryId <*> arbitraryTerm (n-1)
                              , App <$> arbitraryTerm (n-1) <*> arbitraryTerm (n-1)
                              ]
+
+parsesTo :: String -> Term -> Bool
+parsesTo s t = parseString s == Right t
+
+assertParsesTo :: String -> Term -> Assertion
+assertParsesTo s t = parseString s @?= Right t
 
 arbitraryId :: Gen String
 arbitraryId = resize 10 $ listOf1 $ elements idChars

@@ -23,6 +23,7 @@ pApp :: Parser Term
 pApp = do
   verbatim "("
   term1 <- pTerm
+  optionalWhitespace
   term2 <- pTerm
   verbatim ")"
   return $ App term1 term2
@@ -50,6 +51,9 @@ contents p = do
 
 identifier :: Parser String
 identifier = T.identifier lexer
+
+optionalWhitespace :: Parser ()
+optionalWhitespace = try $ T.whiteSpace lexer
 
 verbatim :: String => Parser ()
 verbatim s = do 
