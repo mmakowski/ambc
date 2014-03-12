@@ -18,13 +18,14 @@ import UntypedLambda.Parser
 import UntypedLambda.Syntax
 
 allTests :: [Test]
-allTests = [parsing, parsingQC]
+allTests = [parsing]
 
 parsing :: Test
 parsing = testGroup "untyped lambda parsing" 
-  [ testCase "variable"    (parseString "x"       @=? Right (Var "x"))
-  , testCase "abstraction" (parseString "(\\x.y)" @=? Right (Abs "x" (Var "y")))
-  , testCase "application" (parseString "(x y)"   @=? Right (App (Var "x") (Var "y")))
+  [ testCase     "variable"    $ parseString "x"       @=? Right (Var "x")
+  , testCase     "abstraction" $ parseString "(\\x.y)" @=? Right (Abs "x" (Var "y"))
+  , testCase     "application" $ parseString "(x y)"   @=? Right (App (Var "x") (Var "y"))
+  , testProperty "show/parse round trip" $ \term -> parseString (show term) == Right term
   ]
 
 arbitraryId :: Gen String
@@ -38,11 +39,6 @@ instance Arbitrary Term where
                              , liftM2 Abs arbitraryId (arbitraryTerm $ n-1)
                              , liftM2 App (arbitraryTerm $ n-1) (arbitraryTerm $ n-1)
                              ]
-
-parsingQC :: Test
-parsingQC = testGroup "untyped lambda parsing QC" 
-  [ testProperty "show/parse round trip" $ \term -> parseString (show term) == Right term
-  ]
 
 instance Eq ParseError where
   a == b = errorMessages a == errorMessages b
