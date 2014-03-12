@@ -1,6 +1,5 @@
 module UntypedLambda.Parser
-  ( contents
-  , pTerm
+  ( parseString
   )
 where
 
@@ -10,6 +9,9 @@ import Text.Parsec.Language (emptyDef)
 import qualified Text.Parsec.Token as T
 
 import UntypedLambda.Syntax
+
+parseString :: String -> Either ParseError Term
+parseString = parse (contents pTerm) "<stdin>"
 
 pTerm :: Parser Term
 pTerm =  try pApp

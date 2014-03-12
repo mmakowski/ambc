@@ -1,7 +1,6 @@
 {-# OPTIONS_GHC -fno-warn-orphans -fno-warn-type-defaults #-}
 module UntypedLambdaTests 
   ( allTests
-  , parseUL -- for interactive testing 
   )
 where
 
@@ -23,9 +22,9 @@ allTests = [parsing, parsingQC]
 
 parsing :: Test
 parsing = testGroup "untyped lambda parsing" 
-  [ testCase "variable"    (parseUL "x"       @=? Right (Var "x"))
-  , testCase "abstraction" (parseUL "(\\x.y)" @=? Right (Abs "x" (Var "y")))
-  , testCase "application" (parseUL "(x y)"   @=? Right (App (Var "x") (Var "y")))
+  [ testCase "variable"    (parseString "x"       @=? Right (Var "x"))
+  , testCase "abstraction" (parseString "(\\x.y)" @=? Right (Abs "x" (Var "y")))
+  , testCase "application" (parseString "(x y)"   @=? Right (App (Var "x") (Var "y")))
   ]
 
 arbitraryId :: Gen String
@@ -39,11 +38,8 @@ instance Arbitrary Term where
 
 parsingQC :: Test
 parsingQC = testGroup "untyped lambda parsing QC" 
-  [ testProperty "show/parse round trip" $ \term -> parseUL (show term) == Right term
+  [ testProperty "show/parse round trip" $ \term -> parseString (show term) == Right term
   ]
-
-parseUL :: String -> Either ParseError Term
-parseUL = parse (contents pTerm) "<stdin>"
 
 instance Eq ParseError where
   a == b = errorMessages a == errorMessages b
