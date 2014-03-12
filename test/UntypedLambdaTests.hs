@@ -31,10 +31,11 @@ arbitraryId :: Gen String
 arbitraryId = resize 10 $ listOf1 $ elements idChars
 
 instance Arbitrary Term where
-  arbitrary = oneof [ liftM Var arbitraryId
-                    , liftM2 Abs arbitraryId arbitrary
-                    , liftM2 App arbitrary arbitrary
-                    ]
+  arbitrary = sized $ \n -> if n == 0 then liftM Var arbitraryId
+                            else resize (n-1) $ oneof [ liftM Var arbitraryId
+                                                      , liftM2 Abs arbitraryId arbitrary
+                                                      , liftM2 App arbitrary arbitrary
+                                                      ]
 
 parsingQC :: Test
 parsingQC = testGroup "untyped lambda parsing QC" 
