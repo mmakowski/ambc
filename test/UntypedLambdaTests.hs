@@ -4,7 +4,7 @@ module UntypedLambdaTests
   )
 where
 
-import Control.Monad (liftM, liftM2)
+import Control.Applicative
 import Test.Framework (Test, testGroup)
 import Test.Framework.Providers.HUnit (testCase)
 import Test.Framework.Providers.QuickCheck2 (testProperty)
@@ -28,17 +28,17 @@ parsing = testGroup "untyped lambda parsing"
   , testProperty "show/parse round trip" $ \term -> parseString (show term) == Right term
   ]
 
-arbitraryId :: Gen String
-arbitraryId = resize 10 $ listOf1 $ elements idChars
-
 instance Arbitrary Term where
   arbitrary = sized arbitraryTerm
    where
-     arbitraryTerm 0 = liftM Var arbitraryId
-     arbitraryTerm n = oneof [ liftM Var arbitraryId
-                             , liftM2 Abs arbitraryId (arbitraryTerm $ n-1)
-                             , liftM2 App (arbitraryTerm $ n-1) (arbitraryTerm $ n-1)
+     arbitraryTerm 0 = Var <$> arbitraryId
+     arbitraryTerm n = oneof [ Var <$> arbitraryId
+                             , Abs <$> arbitraryId <*> arbitraryTerm (n-1)
+                             , App <$> arbitraryTerm (n-1) <*> arbitraryTerm (n-1)
                              ]
+
+arbitraryId :: Gen String
+arbitraryId = resize 10 $ listOf1 $ elements idChars
 
 instance Eq ParseError where
   a == b = errorMessages a == errorMessages b
