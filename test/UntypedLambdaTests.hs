@@ -26,20 +26,20 @@ parsing = testGroup "untyped lambda parsing"
   , testCase     "int constant" $ "42"         `assertParsesTo` Const 42
   , testCase     "abstraction"  $ "(\\x.y)"    `assertParsesTo` Abs "x" (Var "y")
   , testCase     "application"  $ "(x y)"      `assertParsesTo` App (Var "x") (Var "y")
-  , testProperty "pretty print/parse round trip" $ \term -> prettyPrint term `parsesTo` term
+  , testProperty "pretty print/parse round trip" $ mapSize (*50) $ \term -> prettyPrint term `parsesTo` term
   ]
 
 instance Arbitrary Term where
   arbitrary = sized arbitraryTerm
    where
-     arbitraryTerm 0 = oneof [ Var <$> arbitraryId
-                             , Const <$> arbitrary
-                             ]
-     arbitraryTerm n = oneof [ Var <$> arbitraryId
-                             , Const <$> arbitrary
-                             , Abs <$> arbitraryId <*> arbitraryTerm (n-1)
-                             , App <$> arbitraryTerm (n `div` 2) <*> arbitraryTerm (n `div` 2)
-                             ]
+     arbitraryTerm 0 = atom
+     arbitraryTerm n = frequency [(1, atom), (10, compound n)]
+     atom = oneof [ Var <$> arbitraryId
+                  , Const <$> arbitrary
+                  ]
+     compound n = oneof [ Abs <$> arbitraryId <*> arbitraryTerm (n-1)
+                        , App <$> arbitraryTerm (n `div` 2) <*> arbitraryTerm (n `div` 2)
+                        ]
 
 parsesTo :: String -> Term -> Bool
 parsesTo s t = parseString s == Right t

@@ -6,7 +6,7 @@ module UntypedLambda.Syntax
 where
 
 idChars :: String
-idChars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz_+-*/%^<>=:?!@"
+idChars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz_*/%^<>=:?!@"
 
 data Term = Var String
           | BuiltIn String
