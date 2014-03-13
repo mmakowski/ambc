@@ -17,7 +17,13 @@ parseString = parse (contents pTerm) "<stdin>"
 pTerm :: Parser Term
 pTerm =  try pApp
      <|> try pAbs
+     <|> try pConst
      <|> pVar
+
+pConst :: Parser Term
+pConst = do
+  n <- T.integer lexer
+  return $ Const n
 
 pApp :: Parser Term
 pApp = do

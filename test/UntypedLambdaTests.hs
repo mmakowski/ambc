@@ -4,7 +4,7 @@ module UntypedLambdaTests
   )
 where
 
-import Control.Applicative
+import Control.Applicative ((<$>), (<*>))
 import Test.Framework (Test, testGroup)
 import Test.Framework.Providers.HUnit (testCase)
 import Test.Framework.Providers.QuickCheck2 (testProperty)
@@ -22,21 +22,23 @@ allTests = [parsing]
 
 parsing :: Test
 parsing = testGroup "untyped lambda parsing" 
-  [ testCase     "variable"    $ "x"           `assertParsesTo` (Var "x")
-  , testCase     "abstraction" $ "(\\x.y)"     `assertParsesTo` (Abs "x" (Var "y"))
-  , testCase     "application" $ "(x y)"       `assertParsesTo` (App (Var "x") (Var "y"))
-  , testCase     "application with whitespace" $ 
-                                 "((\\x.y) z)" `assertParsesTo` (App (Abs "x" (Var "y")) (Var "z"))
-  , testProperty "show/parse round trip" $ \term -> (show term) `parsesTo` term
+  [ testCase     "variable"     $ "x"          `assertParsesTo` Var "x"
+  , testCase     "int constant" $ "42"         `assertParsesTo` Const 42
+  , testCase     "abstraction"  $ "(\\x.y)"    `assertParsesTo` Abs "x" (Var "y")
+  , testCase     "application"  $ "(x y)"      `assertParsesTo` App (Var "x") (Var "y")
+  , testProperty "pretty print/parse round trip" $ \term -> prettyPrint term `parsesTo` term
   ]
 
 instance Arbitrary Term where
   arbitrary = sized arbitraryTerm
    where
-     arbitraryTerm 0 = Var <$> arbitraryId
+     arbitraryTerm 0 = oneof [ Var <$> arbitraryId
+                             , Const <$> arbitrary
+                             ]
      arbitraryTerm n = oneof [ Var <$> arbitraryId
+                             , Const <$> arbitrary
                              , Abs <$> arbitraryId <*> arbitraryTerm (n-1)
-                             , App <$> arbitraryTerm (n-1) <*> arbitraryTerm (n-1)
+                             , App <$> arbitraryTerm (n `div` 2) <*> arbitraryTerm (n `div` 2)
                              ]
 
 parsesTo :: String -> Term -> Bool

@@ -1,18 +1,23 @@
 module UntypedLambda.Syntax 
-  ( idChars
-  , Term (..)
+  ( Term (..)
+  , idChars
+  , prettyPrint
   )
 where
 
-idChars :: [Char]
-idChars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_+-*/%^<>=:?!@"
+idChars :: String
+idChars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz_+-*/%^<>=:?!@"
 
 data Term = Var String
+          | BuiltIn String
+          | Const Integer
           | Abs String Term
           | App Term Term
-  deriving (Eq)
+  deriving (Eq, Show)
 
-instance Show Term where
-  show (Var ident)                     = ident
-  show (Abs ident term)                = "(\\" ++ ident ++ "." ++ (show term) ++ ")"
-  show (App term1 term2)               = "(" ++ (show term1) ++ " " ++ (show term2) ++ ")"
+prettyPrint :: Term -> String
+prettyPrint (Var ident)       = ident
+prettyPrint (BuiltIn ident)   = ident
+prettyPrint (Const val)       = show val
+prettyPrint (Abs ident term)  = "(\\" ++ ident ++ "." ++ prettyPrint term ++ ")"
+prettyPrint (App term1 term2) = "(" ++ prettyPrint term1 ++ " " ++ prettyPrint term2 ++ ")"
