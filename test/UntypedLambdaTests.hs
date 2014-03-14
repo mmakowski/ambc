@@ -31,15 +31,21 @@ parsing = testGroup "untyped lambda parsing"
 
 instance Arbitrary Term where
   arbitrary = sized arbitraryTerm
-   where
-     arbitraryTerm 0 = atom
-     arbitraryTerm n = frequency [(1, atom), (10, compound n)]
-     atom = oneof [ Var <$> arbitraryId
-                  , Const <$> arbitrary
-                  ]
-     compound n = oneof [ Abs <$> arbitraryId <*> arbitraryTerm (n-1)
-                        , App <$> arbitraryTerm (n `div` 2) <*> arbitraryTerm (n `div` 2)
-                        ]
+    where
+      arbitraryTerm 0 = atom
+      arbitraryTerm n = frequency [(1, atom), (10, compound n)]
+      atom = oneof [ Var <$> arbitraryId
+                   , Const <$> arbitrary
+                   ]
+      compound n = oneof [ Abs <$> arbitraryId <*> arbitraryTerm (n-1)
+                         , App <$> arbitraryTerm (n `div` 2) <*> arbitraryTerm (n `div` 2)
+                         ]
+
+  shrink (Var ident)       = Var <$> shrink ident
+  shrink (Const n)         = Const <$> shrink n
+  shrink (BuiltIn _)       = []
+  shrink (Abs _ term)      = [term]
+  shrink (App term1 term2) = [term1, term2]
 
 parsesTo :: String -> Term -> Bool
 parsesTo s t = parseString s == Right t
