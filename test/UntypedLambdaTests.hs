@@ -15,10 +15,23 @@ import Text.Parsec
 import Text.Parsec.Error
 
 import UntypedLambda.Parser
+import UntypedLambda.Reduction
 import UntypedLambda.Syntax
 
 allTests :: [Test]
-allTests = [parsing]
+allTests = [basic, parsing, reduction]
+
+basic :: Test
+basic = testGroup "basic functions on lambda terms"
+  [ testCase "variable is free if unbound" 
+                                $ freeVars (Var "x")           @?= ["x"]
+  , testCase "variable is not free if bound"
+                                $ freeVars (Abs "x" (Var "x")) @?= []
+  -- TODO
+  --, testProperty "free variables in application is free in one of the terms"
+  --                              $ \term -> case term of
+  --                                  App t1 t2 -> freeVars
+  ]
 
 parsing :: Test
 parsing = testGroup "untyped lambda parsing" 
@@ -28,6 +41,21 @@ parsing = testGroup "untyped lambda parsing"
   , testCase     "application"  $ "(x y)"      `assertParsesTo` App (Var "x") (Var "y")
   , testProperty "pretty print/parse round trip" $ mapSize (*50) $ \term -> prettyPrint term `parsesTo` term
   ]
+  where
+    parsesTo s t = parseString s == Right t
+    assertParsesTo s t = parseString s @?= Right t
+
+reduction :: Test
+reduction = testGroup "untyped lambda term reduction"
+  [ testProperty "head normal form is fixed point" 
+                                $ \term -> headNormalForm term == (headNormalForm . headNormalForm) term
+  , testProperty "head normal form does not contain beta-redex in head position" 
+                                $ not . hasBetaRedexInHeadPosition . headNormalForm 
+   -- TODO: test that variables are not confused by beta reduction
+  ]
+  where
+    hasBetaRedexInHeadPosition (App (Abs _ _) _) = True
+    hasBetaRedexInHeadPosition _                 = False
 
 instance Arbitrary Term where
   arbitrary = sized arbitraryTerm
@@ -46,12 +74,6 @@ instance Arbitrary Term where
   shrink (BuiltIn _)       = []
   shrink (Abs _ term)      = [term]
   shrink (App term1 term2) = [term1, term2]
-
-parsesTo :: String -> Term -> Bool
-parsesTo s t = parseString s == Right t
-
-assertParsesTo :: String -> Term -> Assertion
-assertParsesTo s t = parseString s @?= Right t
 
 arbitraryId :: Gen String
 arbitraryId = resize 10 $ listOf1 $ elements idChars
