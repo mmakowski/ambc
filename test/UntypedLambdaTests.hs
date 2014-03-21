@@ -25,11 +25,14 @@ allTests = [basic, parsing, reduction]
 
 basic :: Test
 basic = testGroup "basic functions on lambda terms"
-  [ testCase     "variable is free if unbound"   $ freeVars (Var "x")           @?= Set.singleton "x"
-  , testCase     "variable is not free if bound" $ freeVars (Abs "x" (Var "x")) @?= Set.empty
-  , testProperty "free variables in application is free in one of the terms"
-                                                 $ \(t1, t2) -> freeVars (App t1 t2) == freeVars t1 `Set.union` freeVars t2
+  [ testCase     "variables: var"      $ vars (Var "x")               @?= Set.singleton "x"
+  , testCase     "variables: abs"      $ vars (Abs "x" (Var "y"))     @?= Set.fromList ["x", "y"]
+  , testProperty "variables: app"      $ isUnionOfSubterms vars
+  , testCase     "free variables: var" $ freeVars (Var "x")           @?= Set.singleton "x"
+  , testCase     "free variables: abs" $ freeVars (Abs "x" (Var "x")) @?= Set.empty
+  , testProperty "free variables: app" $ isUnionOfSubterms freeVars
   ]
+  where isUnionOfSubterms f = \(t1, t2) -> f (App t1 t2) == f t1 `Set.union` f t2
 
 parsing :: Test
 parsing = testGroup "untyped lambda parsing" 
@@ -49,11 +52,14 @@ reduction = testGroup "untyped lambda term reduction"
   [ testProperty "head normal form is fixed point" $ \term -> headNormalForm term == (headNormalForm . headNormalForm) term
   , testProperty "head normal form does not contain beta-redex in head position" 
                                                    $ not . hasBetaRedexInHeadPosition . headNormalForm 
-   -- TODO: test that variables are not confused by beta reduction
+  , testCase     "beta reduction: name clash"
+    $ assertBool "variables were incorrectly unified" $ betaReduce termWithVariableClash /= termWithIncorrectlyUnifiedVariables
   ]
   where
     hasBetaRedexInHeadPosition (App (Abs _ _) _) = True
     hasBetaRedexInHeadPosition _                 = False
+    termWithVariableClash               = App (Abs "x" (Abs "y" (App (Var "x") (Var "y")))) (Var "y")
+    termWithIncorrectlyUnifiedVariables = Abs "y" (App (Var "y") (Var "y"))
 
 instance Arbitrary Term where
   arbitrary = sized arbitraryTerm
