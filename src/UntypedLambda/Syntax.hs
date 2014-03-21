@@ -6,6 +6,9 @@ module UntypedLambda.Syntax
   )
 where
 
+import Data.Set (Set)
+import qualified Data.Set as Set
+
 idChars :: String
 idChars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz_*/%^<>=:?!@"
 
@@ -23,10 +26,10 @@ prettyPrint (Const val)       = show val
 prettyPrint (Abs ident term)  = "(\\" ++ ident ++ "." ++ prettyPrint term ++ ")"
 prettyPrint (App term1 term2) = "(" ++ prettyPrint term1 ++ " " ++ prettyPrint term2 ++ ")"
 
-freeVars :: Term -> [String]
+freeVars :: Term -> Set String
 freeVars = freeVars' []
   where
-    freeVars' bound (Var ident)       = if elem ident bound then [] else [ident]
+    freeVars' bound (Var ident)       = if elem ident bound then Set.empty else Set.singleton ident
     freeVars' bound (Abs ident term)  = freeVars' (ident:bound) term
-    freeVars' bound (App term1 term2) = (freeVars' bound term1) ++ (freeVars' bound term2)
-    freeVars' _     _                 = []
+    freeVars' bound (App term1 term2) = (freeVars' bound term1) `Set.union` (freeVars' bound term2)
+    freeVars' _     _                 = Set.empty

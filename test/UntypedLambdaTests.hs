@@ -5,6 +5,8 @@ module UntypedLambdaTests
 where
 
 import Control.Applicative ((<$>), (<*>))
+import qualified Data.Set as Set
+
 import Test.Framework (Test, testGroup)
 import Test.Framework.Providers.HUnit (testCase)
 import Test.Framework.Providers.QuickCheck2 (testProperty)
@@ -23,14 +25,10 @@ allTests = [basic, parsing, reduction]
 
 basic :: Test
 basic = testGroup "basic functions on lambda terms"
-  [ testCase "variable is free if unbound" 
-                                $ freeVars (Var "x")           @?= ["x"]
-  , testCase "variable is not free if bound"
-                                $ freeVars (Abs "x" (Var "x")) @?= []
-  -- TODO
-  --, testProperty "free variables in application is free in one of the terms"
-  --                              $ \term -> case term of
-  --                                  App t1 t2 -> freeVars
+  [ testCase     "variable is free if unbound"   $ freeVars (Var "x")           @?= Set.singleton "x"
+  , testCase     "variable is not free if bound" $ freeVars (Abs "x" (Var "x")) @?= Set.empty
+  , testProperty "free variables in application is free in one of the terms"
+                                                 $ \(t1, t2) -> freeVars (App t1 t2) == freeVars t1 `Set.union` freeVars t2
   ]
 
 parsing :: Test
@@ -39,7 +37,8 @@ parsing = testGroup "untyped lambda parsing"
   , testCase     "int constant" $ "42"         `assertParsesTo` Const 42
   , testCase     "abstraction"  $ "(\\x.y)"    `assertParsesTo` Abs "x" (Var "y")
   , testCase     "application"  $ "(x y)"      `assertParsesTo` App (Var "x") (Var "y")
-  , testProperty "pretty print/parse round trip" $ mapSize (*50) $ \term -> prettyPrint term `parsesTo` term
+  , testProperty "pretty print/parse round trip" 
+                                $ mapSize (*50) $ \term -> prettyPrint term `parsesTo` term
   ]
   where
     parsesTo s t = parseString s == Right t
@@ -47,10 +46,9 @@ parsing = testGroup "untyped lambda parsing"
 
 reduction :: Test
 reduction = testGroup "untyped lambda term reduction"
-  [ testProperty "head normal form is fixed point" 
-                                $ \term -> headNormalForm term == (headNormalForm . headNormalForm) term
+  [ testProperty "head normal form is fixed point" $ \term -> headNormalForm term == (headNormalForm . headNormalForm) term
   , testProperty "head normal form does not contain beta-redex in head position" 
-                                $ not . hasBetaRedexInHeadPosition . headNormalForm 
+                                                   $ not . hasBetaRedexInHeadPosition . headNormalForm 
    -- TODO: test that variables are not confused by beta reduction
   ]
   where
@@ -76,7 +74,7 @@ instance Arbitrary Term where
   shrink (App term1 term2) = [term1, term2]
 
 arbitraryId :: Gen String
-arbitraryId = resize 10 $ listOf1 $ elements idChars
+arbitraryId = resize 2 $ listOf1 $ elements idChars
 
 instance Eq ParseError where
   a == b = errorMessages a == errorMessages b
