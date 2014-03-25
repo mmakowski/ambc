@@ -16,12 +16,14 @@ import Test.QuickCheck
 import Text.Parsec
 import Text.Parsec.Error
 
+import UntypedLambda.Compiler
 import UntypedLambda.Parser
 import UntypedLambda.Reduction
 import UntypedLambda.Syntax
+import qualified Iota.Syntax as I
 
 allTests :: [Test]
-allTests = [basic, parsing, reduction]
+allTests = [basic, parsing, reduction, compilation]
 
 basic :: Test
 basic = testGroup "basic functions on lambda terms"
@@ -60,6 +62,18 @@ reduction = testGroup "untyped lambda term reduction"
     hasBetaRedexInHeadPosition _                 = False
     termWithVariableClash               = App (Abs "x" (Abs "y" (App (Var "x") (Var "y")))) (Var "y")
     termWithIncorrectlyUnifiedVariables = Abs "y" (App (Var "y") (Var "y"))
+
+compilation :: Test
+compilation = testGroup "untyped lambda compilation"
+  [ testCase "to iota: const" $ toIota (Const 42) @?= I.Defs [I.FunDef "main" [] (I.Const 42)]
+  -- TODO:
+  --, testCase "to iota: app"   $ toIota (lambda "((\\sq.(sq 2))(\\x.((* x) x)))") @?= I.Defs [ I.FunDef "sq" ["x"] (I.App [I.Fun "*", I.Var "x", I.Var "x"])
+  --                                                                                          , I.FunDef "main" [] (I.App [I.Fun "sq", I.Const 2]) ]
+  ]
+  --where 
+  --  lambda str = case parseString str of
+  --    Left e  -> error $ show e
+  --    Right t -> t
 
 instance Arbitrary Term where
   arbitrary = sized arbitraryTerm
